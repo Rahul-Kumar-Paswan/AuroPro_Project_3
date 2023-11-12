@@ -1,0 +1,227 @@
+main.tf
+
+provider "aws" {
+  region     = "ap-south-1"
+  access_key = "AKIAWA7AQH7HNWB6A76R"
+  secret_key = "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"
+}
+
+module "my_vpc" {
+  source                 = "./modules/network"
+  vpc_cidr_block         = var.vpc_cidr_block
+  env_prefix             = var.env_prefix
+  public_subnet_cidr_block     = var.public_subnet_cidr_block
+  private_subnet_cidr_block = var.private_subnet_cidr_block
+  public_subnet_availability_zone      = var.public_subnet_availability_zone
+  private_subnet_availability_zone     = var.private_subnet_availability_zone
+}
+
+module "my_instance" {
+    source = "./modules/instances"
+    ami_id = var.ami_id
+    instance_type = var.instance_type
+    subnet_id = module.my_vpc.public_subnet_id
+    instance_name = var.instance_name
+    vpc_id = module.my_vpc.vpc_id
+    env_prefix = var.env_prefix
+}
+
+---
+variables.tf
+
+variable "vpc_cidr_block" {
+    default = "10.0.0.0/16"
+}
+
+variable "env_prefix" {
+    default = "dev"
+}
+
+variable "public_subnet_cidr_block" {
+    default = "10.0.1.0/24"
+}
+
+variable "private_subnet_cidr_block" {
+    default = "10.0.2.0/24"
+}
+
+variable "public_subnet_availability_zone" {
+    default = "ap-south-1a"
+}
+
+variable "private_subnet_availability_zone" {
+    default = "ap-south-1b"
+}
+
+variable "my_ip" {
+    default = "10.0.1.6/24"
+}
+
+variable "avail_zone" {
+    default = "ap-south-1a"
+}
+
+variable "instance_type" {
+    default = "t2.micro"
+}
+
+variable "ami_id" {}
+variable "instance_name" {}
+
+
+# variable "image_name" {}
+
+
+----
+terraform.tfvars
+
+vpc_cidr_block                   = "10.0.0.0/16"
+env_prefix                       = "dev"
+public_subnet_cidr_block         = "10.0.1.0/24"
+private_subnet_cidr_block        = "10.0.2.0/24"
+public_subnet_availability_zone  = "ap-south-1a"
+private_subnet_availability_zone = "ap-south-1b"
+
+ami_id           = "ami-02e94b011299ef128" # Replace with your AMI ID
+instance_type    = "t2.micro"
+instance_name    = "my-first-instance"  # Replace with your instance name
+
+
+----
+
+outputs.tf
+
+output "vpc_id" {
+  value = module.my_vpc.vpc_id
+}
+
+output "public_subnet_id" {
+  value = module.my_vpc.public_subnet_id
+}
+
+output "private_subnet_id" {
+  value = module.my_vpc.private_subnet_id
+}
+
+
+----
+modules/network/main.tf
+
+resource "aws_vpc" "my_vpc" {
+  cidr_block = var.vpc_cidr_block
+  tags = {
+    "Name" = "${var.env_prefix}-vpc"
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = var.public_subnet_cidr_block
+  availability_zone = var.public_subnet_availability_zone
+  map_public_ip_on_launch = true  # This attribute makes instances in this subnet publicly accessible
+  tags = {
+    Name = "${var.env_prefix}-public-subnet"
+  }
+}
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = var.private_subnet_cidr_block
+  availability_zone = var.private_subnet_availability_zone
+  tags = {
+    Name = "${var.env_prefix}-private-subnet"
+  }
+}
+
+----
+modules/network/variables.tf
+
+variable "vpc_cidr_block" {}
+variable "env_prefix" {}
+variable "public_subnet_cidr_block" {}
+variable "private_subnet_cidr_block" {}
+variable "public_subnet_availability_zone" {}
+variable "private_subnet_availability_zone" {}
+
+----
+modules/network/outputs.tf
+
+output "vpc_id" {
+  value = aws_vpc.my_vpc.id
+}
+
+output "public_subnet_id" {
+  value = aws_subnet.public_subnet.id
+}
+
+output "private_subnet_id" {
+  value = aws_subnet.private_subnet.id
+}
+
+----
+modules/instances/main.tf
+
+resource "aws_instance" "my_instance" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  subnet_id     = var.subnet_id
+  tags = {
+    Name = var.instance_name
+  }
+  vpc_security_group_ids = [
+    aws_security_group.my_security_group.id,
+  ]
+}
+
+resource "aws_security_group" "my_security_group" {
+  name_prefix   = "${var.env_prefix}-security-group"
+  description   = "Allow traffic on specified ports"
+  vpc_id        = var.vpc_id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+        prefix_list_ids = []
+    }
+
+  tags = {
+    Name = "${var.env_prefix}-security-group"
+  }
+}
+
+
+----
+modules/instances/variables.tf
+
+variable "ami_id" {}
+variable "instance_type" {}
+variable "instance_name" {}
+variable "subnet_id" {}
+variable "vpc_id" {}
+variable "env_prefix" {}
+
+----
+modules/instances/outputs.tf
+
+output "instance_id" {
+  value = aws_instance.my_instance.id
+}
+
+output "public_ip" {
+  value = aws_instance.my_instance.public_ip
+}
+
+output "private_ip" {
+  value = aws_instance.my_instance.private_ip
+}
+
+----
