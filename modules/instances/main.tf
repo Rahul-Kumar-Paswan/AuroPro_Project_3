@@ -6,8 +6,25 @@ resource "aws_instance" "my_instance" {
     Name = var.instance_name
   }
   vpc_security_group_ids = [
-    aws_security_group.my_security_group.id,
+    aws_security_group.my_security_group.id
   ]
+
+  associate_public_ip_address = true
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y docker.io",  # Installing Docker
+      # Additional commands for Docker setup or container deployment can be added here
+    ]
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ec2-user" # Replace with the username for your AMI
+    private_key = file(var.private_key_path) # Add the path to your private key
+    host        = self.public_ip # You can use `self.public_dns` as well
+  }
 }
 
 resource "aws_security_group" "my_security_group" {
@@ -20,6 +37,20 @@ resource "aws_security_group" "my_security_group" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 2375
+    to_port     = 2375
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Replace with the appropriate IP range for your MySQL server
   }
 
   egress {
