@@ -2,6 +2,7 @@ resource "aws_instance" "my_instance" {
   ami           = var.ami_id
   instance_type = var.instance_type
   subnet_id     = var.subnet_id
+  key_name      = aws_key_pair.ssh-key.key_name  # Associate the key pair with the instance
   tags = {
     Name = var.instance_name
   }
@@ -13,8 +14,13 @@ resource "aws_instance" "my_instance" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y docker.io",  # Installing Docker
+      "sudo yum update -y",
+      "sudo yum install docker -y",
+      "sudo service docker start",
+      "sudo usermod -a -G docker ec2-user",
+      "sudo chmod 666 /var/run/docker.sock",
+      "sudo service docker restart",
+      "docker run hello-world"
       # Additional commands for Docker setup or container deployment can be added here
     ]
   }
@@ -25,6 +31,11 @@ resource "aws_instance" "my_instance" {
     private_key = file(var.private_key_path) # Add the path to your private key
     host        = self.public_ip # You can use `self.public_dns` as well
   }
+}
+
+resource "aws_key_pair" "ssh-key" {
+  key_name   = "my-key-pair"
+  public_key = file(var.public_key_path) # Specify the path to your public key
 }
 
 resource "aws_security_group" "my_security_group" {

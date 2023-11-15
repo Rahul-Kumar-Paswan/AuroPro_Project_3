@@ -28,4 +28,5 @@ module "my_instance" {
     vpc_id = module.my_vpc.vpc_id
     env_prefix = local.current_env.env_prefix
     private_key_path = local.current_env.private_key_path
+    public_key_path = local.current_env.public_key_path
 }
