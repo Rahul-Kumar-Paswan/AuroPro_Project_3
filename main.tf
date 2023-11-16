@@ -1,7 +1,7 @@
 provider "aws" {
   region     = "ap-south-1"
-  access_key = "AKIAWA7AQH7HCQXCLAVY"
-  secret_key = "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"
+  access_key = ""
+  secret_key = ""
 }
 
 # # Retrieve the current environment from the workspace
