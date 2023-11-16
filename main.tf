@@ -1,7 +1,7 @@
 provider "aws" {
-  region     = "ap-south-1"
-  access_key = ""
-  secret_key = ""
+  region     = "${var.region}"
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
 }
 
 # # Retrieve the current environment from the workspace
@@ -29,4 +29,21 @@ module "my_instance" {
     env_prefix = local.current_env.env_prefix
     private_key_path = local.current_env.private_key_path
     public_key_path = local.current_env.public_key_path
+}
+
+module "my_database" {
+    source = "./modules/database"
+    # vpc_id = module.my_vpc.vpc_id
+    # subnet_id = module.my_vpc.public_subnet_id
+    env_prefix = local.current_env.env_prefix
+    db_instance_identifier = local.current_env.db_instance_identifier
+    db_allocated_storage = local.current_env.db_allocated_storage
+    db_engine = local.current_env.db_engine
+    db_engine_version = local.current_env.db_engine_version
+    db_instance_class = local.current_env.db_instance_class
+    db_name = local.current_env.db_name
+    db_username = local.current_env.db_username
+    db_password = local.current_env.db_password
+    db_multi_az = local.current_env.db_multi_az
+    db_backup_retention_period = local.current_env.db_backup_retention_period
 }

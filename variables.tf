@@ -8,6 +8,23 @@ variable "ami_id" {}
 variable "instance_type" {}
 variable "instance_name" {}
 variable "private_key_path" {}
+variable "public_key_path" {}
+variable "access_key" {}
+variable "secret_key" {}
+variable "region" {}
+
+
+variable "db_instance_identifier" {}
+variable "db_allocated_storage" {}
+variable "db_engine" {}
+variable "db_engine_version" {}
+variable "db_instance_class" {}
+variable "db_name" {}
+variable "db_username" {}
+variable "db_password" {}
+variable "db_multi_az" {}
+variable "db_backup_retention_period" {}
+
 
 variable "environments" {
   default = {
