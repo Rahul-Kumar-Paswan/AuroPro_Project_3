@@ -10,6 +10,7 @@ resource "aws_instance" "my_instance" {
   ]
 
   associate_public_ip_address = true
+  key_name = aws_key_pair.ssh-key.key_name  # Associate the key pair with the instance
 
   provisioner "remote-exec" {
     inline = [
@@ -25,6 +26,11 @@ resource "aws_instance" "my_instance" {
     private_key = file(var.private_key_path) # Add the path to your private key
     host        = self.public_ip # You can use `self.public_dns` as well
   }
+}
+
+resource "aws_key_pair" "ssh-key" {
+  key_name   = "my-key"
+  public_key = file("~/.ssh/my-key.pub")
 }
 
 resource "aws_security_group" "my_security_group" {
