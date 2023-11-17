@@ -32,18 +32,20 @@ module "my_instance" {
 }
 
 module "my_database" {
-    source = "./modules/database"
-    # vpc_id = module.my_vpc.vpc_id
-    # subnet_id = module.my_vpc.public_subnet_id
-    env_prefix = local.current_env.env_prefix
-    db_instance_identifier = local.current_env.db_instance_identifier
-    db_allocated_storage = local.current_env.db_allocated_storage
-    db_engine = local.current_env.db_engine
-    db_engine_version = local.current_env.db_engine_version
-    db_instance_class = local.current_env.db_instance_class
-    db_name = local.current_env.db_name
-    db_username = local.current_env.db_username
-    db_password = local.current_env.db_password
-    db_multi_az = local.current_env.db_multi_az
-    db_backup_retention_period = local.current_env.db_backup_retention_period
+  source                    = "./modules/database"
+  vpc_id                    = module.my_vpc.vpc_id
+  subnet_id_1               = module.my_vpc.public_subnet_id
+  subnet_id_2                 = module.my_vpc.private_subnet_id
+  env_prefix                = local.current_env.env_prefix
+  db_instance_identifier    = "${var.db_instance_identifier}"
+  db_allocated_storage      = "${var.db_allocated_storage}"
+  db_engine                 = "${var.db_engine}"
+  db_engine_version         = "${var.db_engine_version}"
+  db_instance_class         = "${var.db_instance_class}"
+  db_name                   = "${var.db_name}"
+  db_username               = "${var.db_username}"
+  db_password               = "${var.db_password}"
+  db_multi_az               = "${var.db_multi_az}"
+  db_backup_retention_period = "${var.db_backup_retention_period}"
+  my_security_group_id      = module.my_instance.my_security_group_id
 }
